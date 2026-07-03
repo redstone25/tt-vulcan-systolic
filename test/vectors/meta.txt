@@ -1,0 +1,9 @@
+M 8
+K 8
+N 4
+n 4
+ktiles 2
+wbytes 32
+abytes 64
+insns 9
+cycles 41
