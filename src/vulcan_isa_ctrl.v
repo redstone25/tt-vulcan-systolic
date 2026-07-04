@@ -45,11 +45,13 @@ module vulcan_isa_ctrl #(
                OP_SETO = 8'd4, OP_GEMM = 8'd5, OP_HALT = 8'd6;
 
     // ---- memories ----------------------------------------------------------
+    // indices reduced mod the memory size so host pointer wrap and runaway
+    // programs stay well-defined in both simulation and synthesis
     reg [31:0] insn [0:INSN_WORDS-1];
     reg [7:0]  mem  [0:MEM_BYTES-1];
     always @(posedge clk) begin
-        if (wr_insn_en) insn[wr_insn_addr] <= wr_insn_data;
-        if (wr_mem_en)  mem[wr_mem_addr]   <= wr_mem_data;
+        if (wr_insn_en) insn[wr_insn_addr % INSN_WORDS] <= wr_insn_data;
+        if (wr_mem_en)  mem[wr_mem_addr % MEM_BYTES]    <= wr_mem_data;
     end
 
     // ---- the array ---------------------------------------------------------
@@ -117,7 +119,7 @@ module vulcan_isa_ctrl #(
                 end
 
                 S_FETCH: begin
-                    ir <= insn[pc];
+                    ir <= insn[pc % INSN_WORDS];
                     pc <= pc + 4'd1;
                     state <= S_EXEC;
                 end
@@ -148,7 +150,7 @@ module vulcan_isa_ctrl #(
                 S_LDW: begin
                     if (byte_i < N[2:0]) begin
                         arr_wrow[8*byte_i +: 8]
-                            <= mem[imm[7:0] + wrow_i * N + byte_i];
+                            <= mem[(imm[7:0] + wrow_i * N + byte_i) % MEM_BYTES];
                         byte_i <= byte_i + 3'd1;
                     end else begin
                         arr_wen <= 1'b1;
@@ -162,7 +164,7 @@ module vulcan_isa_ctrl #(
                 S_GEMM: begin
                     if (byte_i < N[2:0]) begin
                         arr_arow[8*byte_i +: 8]
-                            <= mem[a_base[7:0] + row * N + byte_i];
+                            <= mem[(a_base[7:0] + row * N + byte_i) % MEM_BYTES];
                         byte_i <= byte_i + 3'd1;
                     end else begin
                         arr_avalid <= 1'b1;

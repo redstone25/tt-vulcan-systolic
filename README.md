@@ -2,7 +2,7 @@
 
 # VULCAN systolic GEMM — Tiny Tapeout (TTSKY26c)
 
-A **4×4 weight-stationary int8 systolic array** with a 7-op ISA controller
+A **2×2 weight-stationary int8 systolic array** (a 4×4 configuration is verified in simulation; the shuttle build is the 2×2 silicon config chosen by the area rule) with a 7-op ISA controller
 (**VULCAN-ISA v0**), driven over a byte bus from the TT demo board. Part of the
 [VULCAN](https://github.com/redstone25/vulcan) mini-EDA / accelerator project:
 the C++ simulator there is the golden model, and every testbench in this repo

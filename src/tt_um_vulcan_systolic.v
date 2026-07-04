@@ -26,6 +26,15 @@ module tt_um_vulcan_systolic (
                CMD_RUN     = 8'h03,
                CMD_RD_RES  = 8'h04;
 
+    // Silicon configuration — set by the TT area rule (rtl/SPEC.md): the 4x4
+    // build synthesized to ~337k um^2 (23.8x a 1x1 tile), so the shuttle build
+    // is a 2x2-tile n=2 array with right-sized memories. Same ISA, and the
+    // golden model emits matching vectors via --isa-vectors --vec-n 2.
+    localparam ARRAY_N    = 2,
+               INSN_WORDS = 12,
+               MEM_BYTES  = 32,
+               RES_WORDS  = 8;
+
     // ---- strobe edge detection (host may hold strobes for many cycles) ----
     reg cmd_q, data_q;
     wire cmd_pulse  = uio_in[0] & ~cmd_q;
@@ -54,7 +63,12 @@ module tt_um_vulcan_systolic (
     wire        ctrl_busy, ctrl_done;
     wire [31:0] res_data;
 
-    vulcan_isa_ctrl ctrl (
+    vulcan_isa_ctrl #(
+        .N         (ARRAY_N),
+        .INSN_WORDS(INSN_WORDS),
+        .MEM_BYTES (MEM_BYTES),
+        .RES_WORDS (RES_WORDS)
+    ) ctrl (
         .clk         (clk),
         .rst_n       (rst_n),
         .wr_insn_en  (wr_insn_en),

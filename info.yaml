@@ -1,14 +1,14 @@
 # Tiny Tapeout project information
 project:
-  title:        "VULCAN systolic GEMM (4x4, VULCAN-ISA v0)"
+  title:        "VULCAN systolic GEMM (VULCAN-ISA v0)"
   author:       "Ivan"
   discord:      ""
-  description:  "4x4 weight-stationary int8 systolic array with a 7-op ISA controller; run GEMMs over a byte bus"
+  description:  "2x2 weight-stationary int8 systolic array with a 7-op ISA controller; run GEMMs over a byte bus"
   language:     "Verilog"
   clock_hz:     50000000
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
-  tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
+  tiles: "2x2"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_vulcan_systolic"

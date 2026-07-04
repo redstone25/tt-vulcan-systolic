@@ -1,9 +1,9 @@
-M 8
-K 8
-N 4
-n 4
+M 4
+K 4
+N 2
+n 2
 ktiles 2
-wbytes 32
-abytes 64
+wbytes 8
+abytes 16
 insns 9
-cycles 41
+cycles 21

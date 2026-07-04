@@ -28,7 +28,7 @@ any number of cycles — exactly one transfer happens per rising edge.
 | WR_INSN | `0x01` | reset instruction write pointer; each DATA_VALID byte streams into the instruction buffer, **4 bytes per 32-bit word, little-endian**, word address auto-increments (16 words max) |
 | WR_MEM | `0x02` | reset scratch-SRAM write pointer; each DATA_VALID byte writes one byte, auto-increment (256 bytes) |
 | RUN | `0x03` | start execution at PC 0; BUSY rises, then DONE when HALT executes |
-| RD_RES | `0x04` | reset read pointer; `uo_out` presents result byte 0; each DATA_VALID advances one byte — **little-endian int32 stream** of the 32-word result buffer (128 bytes) |
+| RD_RES | `0x04` | reset read pointer; `uo_out` presents result byte 0; each DATA_VALID advances one byte — **little-endian int32 stream** of the result buffer (silicon config: 8 words / 32 bytes) |
 
 Instruction encoding (must match `include/vulcan/isa.hpp`):
 `[31:24] opcode | [23:0] immediate`; NOP=0 CLR=1 LDW=2 LDA=3 SETO=4 GEMM=5 HALT=6.
@@ -40,10 +40,12 @@ Run the rt_gemm demo (vectors from `vulcan --isa-vectors`):
 ```
 reset                      rst_n low ≥2 clks, high
 CMD  0x01 (WR_INSN)        then 9 words × 4 bytes LE via DATA_VALID
-CMD  0x02 (WR_MEM)         then 96 payload bytes (B tiles ++ packed A)
+CMD  0x02 (WR_MEM)         then 24 payload bytes (B tiles ++ packed A)
 CMD  0x03 (RUN)            poll uio[6] DONE (BUSY drops first)
-CMD  0x04 (RD_RES)         read uo_out, DATA_VALID ×127 more → 32 int32 (LE)
+CMD  0x04 (RD_RES)         read uo_out, DATA_VALID ×31 more → 8 int32 (LE)
 ```
+(numbers are for the n=2 silicon vectors, `vulcan --isa-vectors --vec-n 2
+--vec-m 4 --vec-k 4`; the n=4 sim config uses 96 bytes / 32 words)
 
 Rules:
 
@@ -52,12 +54,13 @@ Rules:
 - `rst_n` clears PC, pointers, mode, DONE, and the array (result buffer zeroed).
 - GEMM **accumulates** into the result buffer — send CLR first (the demo
   program does) unless you are K-tiling on purpose.
-- Result buffer is 32 words (8 rows × 4 columns); reads past byte 127 wrap.
+- Result buffer: 8 words in the 2×2 silicon config (32 in the n=4 sim config); reads wrap past the end.
 
 ## Timing
 
 No timing closure surprises expected at TT's 50 MHz default: the datapath is
 int8 multiplies into 24-bit adds with registered hops. Measured RTL cycle
-counts for the demo program: 156 controller cycles from RUN to DONE
-(byte-serial SRAM reads dominate; the C++ model's 41 is analytic — SPEC allows
-the divergence, results must be byte-exact and are).
+counts: 156 controller cycles RUN→DONE for the n=4 demo program (byte-serial
+SRAM reads dominate; the C++ model's 41 is analytic — SPEC allows the
+divergence, results must be byte-exact and are). The n=2 silicon program is
+proportionally shorter.
